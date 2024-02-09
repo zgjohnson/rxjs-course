@@ -13,8 +13,8 @@ import {createHttpObservable} from "../common/util";
 export class HomeComponent implements OnInit {
 
 
-    beginnerCourses: Course[];
-    advancedCourses: Course[];
+    beginnerCourses$: Observable<Course[]>;
+    advancedCourses$: Observable<Course[]>;
 
     constructor() {
 
@@ -25,23 +25,38 @@ export class HomeComponent implements OnInit {
 
 
       //Making my own observable
-      const https$ = createHttpObservable('/api/courses')
+      //This would lead to nested subscriptions
+      // const https$ = createHttpObservable('/api/courses')
+      // const courses$ = https$
+      //   .pipe(
+      //     map(res => Object.values<Course>(res["payload"]))
+      //   )
+      // courses$.subscribe(
+      //   courses => {
+      //     this.beginnerCourses = courses.filter(course => course.category == 'BEGINNER');
+      //     this.advancedCourses = courses.filter(course => course.category == 'ADVANCED');
+      //   },
+      //   noop,
+      //   () => console.log('completed')
+      // )
 
-      const courses$ = https$
+      //Better way to do it no subscription This is a reactive design
+
+      const https$ = createHttpObservable('/api/courses')
+      const courses$: Observable<Course[]> = https$
         .pipe(
-          map(res => Object.values<Course>(res["payload"]))
+          map(res => Object.values(res["payload"]))
         )
 
-      courses$.subscribe(
-        courses => {
-          this.beginnerCourses = courses.filter(course => course.category == 'BEGINNER');
-          this.advancedCourses = courses.filter(course => course.category == 'ADVANCED');
-        },
-        noop,
-        () => console.log('completed')
-      )
+      this.beginnerCourses$ = courses$
+        .pipe(
+          map(courses => courses.filter(course => course.category == 'BEGINNER') )
+        )
 
-
+      this.advancedCourses$ = courses$
+        .pipe(
+          map(courses => courses.filter(course => course.category == 'ADVANCED') )
+        )
     }
 
 }
