@@ -6,57 +6,60 @@ import {createHttpObservable} from "../common/util";
 
 
 @Component({
-    selector: 'home',
-    templateUrl: './home.component.html',
-    styleUrls: ['./home.component.css']
+  selector: 'home',
+  templateUrl: './home.component.html',
+  styleUrls: ['./home.component.css']
 })
 export class HomeComponent implements OnInit {
 
 
-    beginnerCourses$: Observable<Course[]>;
-    advancedCourses$: Observable<Course[]>;
+  beginnerCourses$: Observable<Course[]>;
+  advancedCourses$: Observable<Course[]>;
 
-    constructor() {
+  constructor() {
 
-    }
+  }
 
-    ngOnInit() {
-      // http observable from scratch
+  ngOnInit() {
+    // http observable from scratch
 
 
-      //Making my own observable
-      //This would lead to nested subscriptions
-      // const https$ = createHttpObservable('/api/courses')
-      // const courses$ = https$
-      //   .pipe(
-      //     map(res => Object.values<Course>(res["payload"]))
-      //   )
-      // courses$.subscribe(
-      //   courses => {
-      //     this.beginnerCourses = courses.filter(course => course.category == 'BEGINNER');
-      //     this.advancedCourses = courses.filter(course => course.category == 'ADVANCED');
-      //   },
-      //   noop,
-      //   () => console.log('completed')
-      // )
+    //Making my own observable
+    //This would lead to nested subscriptions
+    // const https$ = createHttpObservable('/api/courses')
+    // const courses$ = https$
+    //   .pipe(
+    //     map(res => Object.values<Course>(res["payload"]))
+    //   )
+    // courses$.subscribe(
+    //   courses => {
+    //     this.beginnerCourses = courses.filter(course => course.category == 'BEGINNER');
+    //     this.advancedCourses = courses.filter(course => course.category == 'ADVANCED');
+    //   },
+    //   noop,
+    //   () => console.log('completed')
+    // )
 
-      //Better way to do it no subscription This is a reactive design
+    //Better way to do it no subscription This is a reactive design
 
-      const https$ = createHttpObservable('/api/courses')
-      const courses$: Observable<Course[]> = https$
-        .pipe(
-          map(res => Object.values(res["payload"]))
-        )
+    const https$ = createHttpObservable('/api/courses');
 
-      this.beginnerCourses$ = courses$
-        .pipe(
-          map(courses => courses.filter(course => course.category == 'BEGINNER') )
-        )
+    const courses$: Observable<Course[]> = https$
+      .pipe(
+        tap(() => console.log('HTTP request executed')),
+        map(res => Object.values(res["payload"])),
+        shareReplay<Course[]>()
+      );
 
-      this.advancedCourses$ = courses$
-        .pipe(
-          map(courses => courses.filter(course => course.category == 'ADVANCED') )
-        )
-    }
+    this.beginnerCourses$ = courses$
+      .pipe(
+        map(courses => courses.filter(course => course.category == 'BEGINNER'))
+      )
+
+    this.advancedCourses$ = courses$
+      .pipe(
+        map(courses => courses.filter(course => course.category == 'ADVANCED'))
+      )
+  }
 
 }
